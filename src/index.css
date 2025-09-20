@@ -1,54 +1,51 @@
-/* This file imports Tailwind's base styles, components, and utilities.
-It is required for the Tailwind classes in your components to work.
-*/
+/* src/index.css */
+
+/* Add Tailwind's base, components, and utilities styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*
-You can add any custom CSS styles here if needed,
-but they should be placed after the @tailwind directives.
-*/
-
-/* Optional: Add custom animations from the tailwind.config.js file */
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
+/* Custom CSS for the sparkle effect on the button */
+.sparkle {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: white;
+  /* The color of the sparkle */
+  border-radius: 50%;
+  opacity: 0;
+  animation: sparkle 1.5s ease-out infinite;
 }
 
-.animate-blob {
-  animation: blob 7s infinite;
+.sparkle.delay-1 {
+  top: 60%;
+  left: 70%;
+  animation-delay: 0.5s;
+  width: 10px;
+  height: 10px;
 }
 
-.animation-delay-2000 {
-  animation-delay: 2s;
+.sparkle.delay-2 {
+  top: 30%;
+  left: 40%;
+  animation-delay: 1s;
+  width: 12px;
+  height: 12px;
 }
 
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
 
-.animate-fade-in-down {
-  animation: fade-in-down 0.5s ease-out forwards;
-}
-
-@keyframes fade-in-down {
-  0% {
+@keyframes slideInUp {
+  from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(20px);
   }
-  100% {
+
+  to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.animate-slide-in {
+  animation: slideInUp 0.5s ease-out forwards;
 }
