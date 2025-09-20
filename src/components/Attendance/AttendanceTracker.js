@@ -1,11 +1,45 @@
 import React, { useState, useEffect } from 'react';
 
-const AttendanceTracker = () => {
+// Component for a custom, state-driven alert message
+const AlertMessage = ({ message, type = 'error', onClose, isUnicornTheme }) => {
+    if (!message) return null;
+
+    const colors = isUnicornTheme ? {
+        error: 'bg-red-100 border-red-400 text-red-700',
+        info: 'bg-blue-100 border-blue-400 text-blue-700',
+    } : {
+        error: 'bg-red-900 border-red-600 text-red-300',
+        info: 'bg-blue-900 border-blue-600 text-blue-300',
+    };
+
+    return (
+        <div className={`mt-4 p-4 rounded-lg border-l-4 ${colors[type]} transition-all duration-300 transform scale-100 animate-slide-in`}>
+            <div className="flex justify-between items-center">
+                <p className="text-sm font-medium">{message}</p>
+                <button onClick={onClose} className="text-xl leading-none font-bold ml-4">
+                    &times;
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const AttendanceTracker = ({ theme }) => {
     const [students, setStudents] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [attendanceRecords, setAttendanceRecords] = useState({});
     const [newStudent, setNewStudent] = useState({ name: '', age: '', gender: '' });
     const [showAddForm, setShowAddForm] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+
+    const isUnicornTheme = theme === 'unicorn';
+    const bgColor = isUnicornTheme ? 'bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100' : 'bg-gradient-to-br from-gray-900 via-purple-950 to-blue-950 text-white';
+
+    const cardClasses = `p-6 rounded-3xl shadow-lg transition-all duration-500`;
+    const cardBgColor = isUnicornTheme ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-800/50 backdrop-blur-sm text-white';
+    const textColor = isUnicornTheme ? 'text-gray-700' : 'text-gray-300';
+    const headerColor = isUnicornTheme ? 'text-purple-800' : 'text-yellow-200';
+    const buttonBaseClasses = `px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105`;
 
     // Load data from localStorage
     useEffect(() => {
@@ -27,7 +61,11 @@ const AttendanceTracker = () => {
     // Add new student
     const addStudent = (e) => {
         e.preventDefault();
-        if (!newStudent.name.trim()) return;
+        setAlertMessage('');
+        if (!newStudent.name.trim()) {
+            setAlertMessage('Student name is required.');
+            return;
+        }
 
         const student = {
             id: Date.now(),
@@ -40,14 +78,13 @@ const AttendanceTracker = () => {
         setStudents([...students, student]);
         setNewStudent({ name: '', age: '', gender: '' });
         setShowAddForm(false);
+        setAlertMessage('Student added successfully!');
     };
 
     // Remove student
     const removeStudent = (studentId) => {
-        if (window.confirm('Are you sure you want to remove this student?')) {
+        if (window.confirm('Are you sure you want to remove this student? This action cannot be undone.')) {
             setStudents(students.filter(student => student.id !== studentId));
-
-            // Also remove attendance records for this student
             const updatedRecords = { ...attendanceRecords };
             Object.keys(updatedRecords).forEach(date => {
                 if (updatedRecords[date][studentId]) {
@@ -114,221 +151,233 @@ const AttendanceTracker = () => {
     const monthlyReport = getMonthlyReport();
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-green-700 mb-6">📅 Attendance Tracker</h1>
-
-            {/* Date Selection */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Select Date:
-                        </label>
-                        <input
-                            type="date"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                        />
-                    </div>
-                    <button
-                        onClick={() => setShowAddForm(!showAddForm)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-                    >
-                        {showAddForm ? 'Cancel' : '+ Add Student'}
-                    </button>
-                </div>
-            </div>
-
-            {/* Add Student Form */}
-            {showAddForm && (
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Add New Student</h2>
-                    <form onSubmit={addStudent} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                            <input
-                                type="text"
-                                value={newStudent.name}
-                                onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                                placeholder="Child's name"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                            <input
-                                type="number"
-                                value={newStudent.age}
-                                onChange={(e) => setNewStudent({ ...newStudent, age: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                                placeholder="Age in years"
-                                min="0"
-                                max="6"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                            <select
-                                value={newStudent.gender}
-                                onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                            >
-                                <option value="">Select Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div className="md:col-span-3">
-                            <button
-                                type="submit"
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-                            >
-                                Add Student
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <div className={`min-h-screen p-8 transition-all duration-1000 ${bgColor}`}>
+            {/* Themed background blobs for both light and dark modes */}
+            {isUnicornTheme ? (
+                <>
+                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob z-0"></div>
+                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 z-0"></div>
+                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 z-0"></div>
+                </>
+            ) : (
+                <>
+                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob z-0"></div>
+                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-2000 z-0"></div>
+                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-4000 z-0"></div>
+                </>
             )}
 
-            {/* Attendance Stats */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h2 className="text-xl font-semibold mb-4">Daily Attendance - {selectedDate}</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div className="bg-green-100 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-green-800">{stats.present}</div>
-                        <div className="text-sm text-green-600">Present</div>
-                    </div>
-                    <div className="bg-red-100 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-red-800">{stats.absent}</div>
-                        <div className="text-sm text-red-600">Absent</div>
-                    </div>
-                    <div className="bg-blue-100 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-800">{stats.total}</div>
-                        <div className="text-sm text-blue-600">Total Students</div>
-                    </div>
-                    <div className="bg-purple-100 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-800">{stats.percentage}%</div>
-                        <div className="text-sm text-purple-600">Attendance Rate</div>
+            <div className="relative z-10 container mx-auto px-4 py-8">
+                <h1 className={`text-4xl font-extrabold text-center mb-6 drop-shadow-md transition-colors duration-500 ${headerColor}`}>
+                    📅 Attendance Tracker
+                </h1>
+
+                {/* Date Selection */}
+                <div className={`${cardClasses} ${cardBgColor}`}>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                            <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                                Select Date:
+                            </label>
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className={`w-full p-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isUnicornTheme ? 'bg-white border border-gray-300 text-gray-700 focus:ring-pink-300' : 'bg-gray-700 border border-gray-600 text-white focus:ring-purple-500'}`}
+                            />
+                        </div>
+                        <button
+                            onClick={() => setShowAddForm(!showAddForm)}
+                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-800 hover:bg-purple-900 text-white'}`}
+                        >
+                            {showAddForm ? 'Cancel' : '+ Add Student'}
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Student Attendance List */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Mark Attendance</h2>
-                    <span className="text-sm text-gray-600">{students.length} students</span>
-                </div>
-
-                {students.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                        <div className="text-4xl mb-2">👶</div>
-                        <p>No students added yet.</p>
-                        <p className="text-sm">Click "Add Student" to get started.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {students.map(student => {
-                            const status = getAttendanceStatus(student.id);
-                            const monthlyStats = monthlyReport[student.id] || { present: 0, total: 0 };
-                            const monthlyPercentage = monthlyStats.total > 0
-                                ? Math.round((monthlyStats.present / monthlyStats.total) * 100)
-                                : 0;
-
-                            return (
-                                <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                    <div className="flex-1">
-                                        <div className="font-medium">{student.name}</div>
-                                        <div className="text-sm text-gray-600">
-                                            {student.age && `${student.age} years • `}{student.gender}
-                                            {monthlyStats.total > 0 && ` • Monthly: ${monthlyPercentage}%`}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => markAttendance(student.id, 'present')}
-                                                className={`px-4 py-2 rounded-md text-sm font-medium ${status === 'present'
-                                                        ? 'bg-green-600 text-white'
-                                                        : 'bg-green-100 text-green-800 hover:bg-green-200'
-                                                    }`}
-                                            >
-                                                ✅ Present
-                                            </button>
-                                            <button
-                                                onClick={() => markAttendance(student.id, 'absent')}
-                                                className={`px-4 py-2 rounded-md text-sm font-medium ${status === 'absent'
-                                                        ? 'bg-red-600 text-white'
-                                                        : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                                    }`}
-                                            >
-                                                ❌ Absent
-                                            </button>
-                                        </div>
-
-                                        <button
-                                            onClick={() => removeStudent(student.id)}
-                                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-md"
-                                            title="Remove student"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                {/* Add Student Form */}
+                {showAddForm && (
+                    <div className={`${cardClasses} ${cardBgColor} mt-6`}>
+                        <h2 className={`text-xl font-semibold mb-4 ${headerColor}`}>Add New Student</h2>
+                        <form onSubmit={addStudent} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className={`block text-sm font-medium mb-1 ${textColor}`}>Name *</label>
+                                <input
+                                    type="text"
+                                    value={newStudent.name}
+                                    onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                                    className={`w-full p-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isUnicornTheme ? 'bg-white border border-gray-300 text-gray-700 focus:ring-pink-300' : 'bg-gray-700 border border-gray-600 text-white focus:ring-purple-500'}`}
+                                    placeholder="Child's name"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className={`block text-sm font-medium mb-1 ${textColor}`}>Age</label>
+                                <input
+                                    type="number"
+                                    value={newStudent.age}
+                                    onChange={(e) => setNewStudent({ ...newStudent, age: e.target.value })}
+                                    className={`w-full p-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isUnicornTheme ? 'bg-white border border-gray-300 text-gray-700 focus:ring-pink-300' : 'bg-gray-700 border border-gray-600 text-white focus:ring-purple-500'}`}
+                                    placeholder="Age in years"
+                                    min="0"
+                                    max="6"
+                                />
+                            </div>
+                            <div>
+                                <label className={`block text-sm font-medium mb-1 ${textColor}`}>Gender</label>
+                                <select
+                                    value={newStudent.gender}
+                                    onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value })}
+                                    className={`w-full p-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isUnicornTheme ? 'bg-white border border-gray-300 text-gray-700 focus:ring-pink-300' : 'bg-gray-700 border border-gray-600 text-white focus:ring-purple-500'}`}
+                                >
+                                    <option value="" className={isUnicornTheme ? 'text-gray-400' : 'text-gray-400'}>Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div className="md:col-span-3 text-center md:text-left">
+                                <button
+                                    type="submit"
+                                    className={`${buttonBaseClasses} bg-gradient-to-r from-pink-400 to-purple-400 text-white`}
+                                >
+                                    Add Student
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 )}
-            </div>
 
-            {/* Quick Actions */}
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-blue-800 mb-3">💡 Quick Actions</h3>
-                <div className="flex flex-wrap gap-3">
-                    <button
-                        onClick={() => {
-                            students.forEach(student => markAttendance(student.id, 'present'));
-                        }}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
-                    >
-                        Mark All Present
-                    </button>
-                    <button
-                        onClick={() => {
-                            students.forEach(student => markAttendance(student.id, 'absent'));
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm"
-                    >
-                        Mark All Absent
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (window.confirm('Clear all attendance for today?')) {
-                                const updatedRecords = { ...attendanceRecords };
-                                delete updatedRecords[selectedDate];
-                                setAttendanceRecords(updatedRecords);
-                            }
-                        }}
-                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm"
-                    >
-                        Clear Today's Attendance
-                    </button>
+                {/* Attendance Stats */}
+                <div className={`${cardClasses} ${cardBgColor} mt-6`}>
+                    <h2 className={`text-xl font-semibold mb-4 ${headerColor}`}>Daily Attendance - {selectedDate}</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-green-100' : 'bg-green-900'}`}>
+                            <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-green-800' : 'text-green-300'}`}>{stats.present}</div>
+                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-green-600' : 'text-green-400'}`}>Present</div>
+                        </div>
+                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-red-100' : 'bg-red-900'}`}>
+                            <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-red-800' : 'text-red-300'}`}>{stats.absent}</div>
+                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-red-600' : 'text-red-400'}`}>Absent</div>
+                        </div>
+                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-blue-100' : 'bg-blue-900'}`}>
+                            <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-blue-800' : 'text-blue-300'}`}>{stats.total}</div>
+                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-blue-600' : 'text-blue-400'}`}>Total Students</div>
+                        </div>
+                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-purple-100' : 'bg-purple-900'}`}>
+                            <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-purple-800' : 'text-purple-300'}`}>{stats.percentage}%</div>
+                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-purple-600' : 'text-purple-400'}`}>Attendance Rate</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Attendance Tips */}
-            <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <h4 className="font-semibold text-yellow-800 mb-2">📋 Attendance Best Practices</h4>
-                <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
-                    <li>Mark attendance at the start of each day</li>
-                    <li>Follow up with parents of frequently absent children</li>
-                    <li>Regular attendance is crucial for nutrition and learning</li>
-                    <li>Use the monthly reports to identify patterns</li>
-                </ul>
+                {/* Student Attendance List */}
+                <div className={`${cardClasses} ${cardBgColor} mt-6`}>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className={`text-xl font-semibold ${headerColor}`}>Mark Attendance</h2>
+                        <span className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-gray-600' : 'text-gray-400'}`}>{students.length} students</span>
+                    </div>
+
+                    {students.length === 0 ? (
+                        <div className={`text-center py-8 transition-colors duration-500 ${isUnicornTheme ? 'text-gray-500' : 'text-gray-400'}`}>
+                            <div className="text-4xl mb-2">👶</div>
+                            <p>No students added yet.</p>
+                            <p className="text-sm">Click "Add Student" to get started.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {students.map(student => {
+                                const status = getAttendanceStatus(student.id);
+                                const monthlyStats = monthlyReport[student.id] || { present: 0, total: 0 };
+                                const monthlyPercentage = monthlyStats.total > 0 ? Math.round((monthlyStats.present / monthlyStats.total) * 100) : 0;
+
+                                const studentCardClasses = `flex items-center justify-between p-4 rounded-lg border transition-all duration-300 ${isUnicornTheme ? 'border-gray-200 hover:bg-gray-50' : 'border-gray-700 hover:bg-gray-700'}`;
+                                const textMainColor = isUnicornTheme ? 'text-gray-900' : 'text-gray-100';
+                                const textSubColor = isUnicornTheme ? 'text-gray-600' : 'text-gray-400';
+
+                                return (
+                                    <div key={student.id} className={studentCardClasses}>
+                                        <div className="flex-1">
+                                            <div className={`font-medium ${textMainColor}`}>{student.name}</div>
+                                            <div className={`text-sm ${textSubColor}`}>
+                                                {student.age && `${student.age} years • `}{student.gender}
+                                                {monthlyStats.total > 0 && ` • Monthly: ${monthlyPercentage}%`}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => markAttendance(student.id, 'present')}
+                                                    className={`px-4 py-2 rounded-full text-sm font-medium ${status === 'present'
+                                                        ? isUnicornTheme ? 'bg-green-600 text-white' : 'bg-green-700 text-white'
+                                                        : isUnicornTheme ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-green-900 text-green-300 hover:bg-green-800'
+                                                        }`}
+                                                >
+                                                    ✅ Present
+                                                </button>
+                                                <button
+                                                    onClick={() => markAttendance(student.id, 'absent')}
+                                                    className={`px-4 py-2 rounded-full text-sm font-medium ${status === 'absent'
+                                                        ? isUnicornTheme ? 'bg-red-600 text-white' : 'bg-red-700 text-white'
+                                                        : isUnicornTheme ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-red-900 text-red-300 hover:bg-red-800'
+                                                        }`}
+                                                >
+                                                    ❌ Absent
+                                                </button>
+                                            </div>
+
+                                            <button
+                                                onClick={() => removeStudent(student.id)}
+                                                className={`p-2 transition-colors duration-300 ${isUnicornTheme ? 'text-red-600 hover:bg-red-100' : 'text-red-400 hover:bg-red-900'} rounded-full`}
+                                                title="Remove student"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {/* Quick Actions */}
+                <div className={`${cardClasses} ${isUnicornTheme ? 'bg-blue-50 border border-blue-200' : 'bg-blue-900 border border-blue-800'} mt-6`}>
+                    <h3 className={`font-semibold mb-3 ${isUnicornTheme ? 'text-blue-800' : 'text-blue-300'}`}>💡 Quick Actions</h3>
+                    <div className="flex flex-wrap gap-3">
+                        <button
+                            onClick={() => {
+                                students.forEach(student => markAttendance(student.id, 'present'));
+                            }}
+                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-700 hover:bg-green-800 text-white'}`}
+                        >
+                            Mark All Present
+                        </button>
+                        <button
+                            onClick={() => {
+                                students.forEach(student => markAttendance(student.id, 'absent'));
+                            }}
+                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-700 hover:bg-red-800 text-white'}`}
+                        >
+                            Mark All Absent
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (window.confirm('Clear all attendance for today?')) {
+                                    const updatedRecords = { ...attendanceRecords };
+                                    delete updatedRecords[selectedDate];
+                                    setAttendanceRecords(updatedRecords);
+                                }
+                            }}
+                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'bg-gray-700 hover:bg-gray-800 text-white'}`}
+                        >
+                            Clear Today's Attendance
+                        </button>
+                    </div>
+                </div>
+
+                <AlertMessage message={alertMessage} onClose={() => setAlertMessage('')} isUnicornTheme={isUnicornTheme} />
             </div>
         </div>
     );
