@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Confetti from 'react-confetti';
 
 // Component for a custom, state-driven alert message
 const AlertMessage = ({ message, type = 'error', onClose, isUnicornTheme }) => {
@@ -31,15 +32,21 @@ const AttendanceTracker = ({ theme }) => {
     const [newStudent, setNewStudent] = useState({ name: '', age: '', gender: '' });
     const [showAddForm, setShowAddForm] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+    const [showConfetti, setShowConfetti] = useState(false);
 
     const isUnicornTheme = theme === 'unicorn';
-    const bgColor = isUnicornTheme ? 'bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100' : 'bg-gradient-to-br from-gray-900 via-purple-950 to-blue-950 text-white';
+    const bgColor = isUnicornTheme
+        ? 'bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 text-purple-800'
+        : 'bg-gradient-to-br from-gray-900 via-purple-950 to-blue-950 text-white';
 
-    const cardClasses = `p-6 rounded-3xl shadow-lg transition-all duration-500`;
-    const cardBgColor = isUnicornTheme ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-800/50 backdrop-blur-sm text-white';
-    const textColor = isUnicornTheme ? 'text-gray-700' : 'text-gray-300';
+    const cardClasses = `p-6 rounded-3xl shadow-xl transition-all duration-500 border-4 border-white border-opacity-60`;
+    const cardBgColor = isUnicornTheme ? 'bg-white bg-opacity-30' : 'bg-gray-800 bg-opacity-50 text-white';
     const headerColor = isUnicornTheme ? 'text-purple-800' : 'text-yellow-200';
-    const buttonBaseClasses = `px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105`;
+    const buttonBaseClasses = `px-6 py-3 rounded-full text-lg font-bold transition-all duration-300 transform hover:scale-105`;
+
+    const floatingEmojis = isUnicornTheme
+        ? ['🦄', '🌈', '🌟', '☁️', '🎈', '🍭', '🎀', '💖', '✨', '🌸']
+        : ['🌙', '✨', '🪐', '💫', '🚀', '⭐', '☄️', '🔮', '👽', '🌌'];
 
     // Load data from localStorage
     useEffect(() => {
@@ -79,6 +86,8 @@ const AttendanceTracker = ({ theme }) => {
         setNewStudent({ name: '', age: '', gender: '' });
         setShowAddForm(false);
         setAlertMessage('Student added successfully!');
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
     };
 
     // Remove student
@@ -151,32 +160,37 @@ const AttendanceTracker = ({ theme }) => {
     const monthlyReport = getMonthlyReport();
 
     return (
-        <div className={`min-h-screen p-8 transition-all duration-1000 ${bgColor}`}>
-            {/* Themed background blobs for both light and dark modes */}
-            {isUnicornTheme ? (
-                <>
-                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob z-0"></div>
-                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 z-0"></div>
-                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 z-0"></div>
-                </>
-            ) : (
-                <>
-                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob z-0"></div>
-                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-2000 z-0"></div>
-                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-4000 z-0"></div>
-                </>
-            )}
+        <div className={`font-sans min-h-screen overflow-hidden relative transition-all duration-1000 ${bgColor}`}>
+            {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
+
+            {/* Animated Background Emojis */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                {Array.from({ length: 40 }).map((_, index) => (
+                    <div
+                        key={index}
+                        className={`absolute text-4xl opacity-70 animate-float-spin`}
+                        style={{
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 10}s`,
+                            animationDuration: `${Math.random() * 5 + 5}s`
+                        }}
+                    >
+                        {floatingEmojis[Math.floor(Math.random() * floatingEmojis.length)]}
+                    </div>
+                ))}
+            </div>
 
             <div className="relative z-10 container mx-auto px-4 py-8">
                 <h1 className={`text-4xl font-extrabold text-center mb-6 drop-shadow-md transition-colors duration-500 ${headerColor}`}>
-                    📅 Attendance Tracker
+                    📅 Magical Attendance Tracker
                 </h1>
 
-                {/* Date Selection */}
-                <div className={`${cardClasses} ${cardBgColor}`}>
+                {/* Date Selection & Add Student Button */}
+                <div className={`${cardClasses} ${cardBgColor} mb-6`}>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex-1">
-                            <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                            <label className={`block text-sm font-medium mb-2 ${isUnicornTheme ? 'text-purple-700' : 'text-blue-300'}`}>
                                 Select Date:
                             </label>
                             <input
@@ -188,31 +202,31 @@ const AttendanceTracker = ({ theme }) => {
                         </div>
                         <button
                             onClick={() => setShowAddForm(!showAddForm)}
-                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-800 hover:bg-purple-900 text-white'}`}
+                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'}`}
                         >
-                            {showAddForm ? 'Cancel' : '+ Add Student'}
+                            {showAddForm ? 'Hide Form' : '+ Add Little Star'}
                         </button>
                     </div>
                 </div>
 
                 {/* Add Student Form */}
                 {showAddForm && (
-                    <div className={`${cardClasses} ${cardBgColor} mt-6`}>
-                        <h2 className={`text-xl font-semibold mb-4 ${headerColor}`}>Add New Student</h2>
+                    <div className={`${cardClasses} ${cardBgColor} mt-6`} style={{ animation: 'pop-in 0.5s ease-out' }}>
+                        <h2 className={`text-xl font-semibold mb-4 ${headerColor}`}>Enroll a New Friend ✨</h2>
                         <form onSubmit={addStudent} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className={`block text-sm font-medium mb-1 ${textColor}`}>Name *</label>
+                                <label className={`block text-sm font-medium mb-1 ${isUnicornTheme ? 'text-purple-700' : 'text-blue-300'}`}>Name *</label>
                                 <input
                                     type="text"
                                     value={newStudent.name}
                                     onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
                                     className={`w-full p-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${isUnicornTheme ? 'bg-white border border-gray-300 text-gray-700 focus:ring-pink-300' : 'bg-gray-700 border border-gray-600 text-white focus:ring-purple-500'}`}
-                                    placeholder="Child's name"
+                                    placeholder="Child's full name"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className={`block text-sm font-medium mb-1 ${textColor}`}>Age</label>
+                                <label className={`block text-sm font-medium mb-1 ${isUnicornTheme ? 'text-purple-700' : 'text-blue-300'}`}>Age</label>
                                 <input
                                     type="number"
                                     value={newStudent.age}
@@ -224,7 +238,7 @@ const AttendanceTracker = ({ theme }) => {
                                 />
                             </div>
                             <div>
-                                <label className={`block text-sm font-medium mb-1 ${textColor}`}>Gender</label>
+                                <label className={`block text-sm font-medium mb-1 ${isUnicornTheme ? 'text-purple-700' : 'text-blue-300'}`}>Gender</label>
                                 <select
                                     value={newStudent.gender}
                                     onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value })}
@@ -250,23 +264,23 @@ const AttendanceTracker = ({ theme }) => {
 
                 {/* Attendance Stats */}
                 <div className={`${cardClasses} ${cardBgColor} mt-6`}>
-                    <h2 className={`text-xl font-semibold mb-4 ${headerColor}`}>Daily Attendance - {selectedDate}</h2>
+                    <h2 className={`text-xl font-semibold mb-4 ${headerColor}`}>Daily Sparkle Count - {selectedDate}</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-green-100' : 'bg-green-900'}`}>
+                        <div className={`p-4 rounded-lg shadow-inner transition-all duration-500 ${isUnicornTheme ? 'bg-green-100' : 'bg-green-900'}`}>
                             <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-green-800' : 'text-green-300'}`}>{stats.present}</div>
                             <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-green-600' : 'text-green-400'}`}>Present</div>
                         </div>
-                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-red-100' : 'bg-red-900'}`}>
+                        <div className={`p-4 rounded-lg shadow-inner transition-all duration-500 ${isUnicornTheme ? 'bg-red-100' : 'bg-red-900'}`}>
                             <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-red-800' : 'text-red-300'}`}>{stats.absent}</div>
                             <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-red-600' : 'text-red-400'}`}>Absent</div>
                         </div>
-                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-blue-100' : 'bg-blue-900'}`}>
+                        <div className={`p-4 rounded-lg shadow-inner transition-all duration-500 ${isUnicornTheme ? 'bg-blue-100' : 'bg-blue-900'}`}>
                             <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-blue-800' : 'text-blue-300'}`}>{stats.total}</div>
-                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-blue-600' : 'text-blue-400'}`}>Total Students</div>
+                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-blue-600' : 'text-blue-400'}`}>Total Friends</div>
                         </div>
-                        <div className={`p-4 rounded-lg transition-all duration-500 ${isUnicornTheme ? 'bg-purple-100' : 'bg-purple-900'}`}>
+                        <div className={`p-4 rounded-lg shadow-inner transition-all duration-500 ${isUnicornTheme ? 'bg-purple-100' : 'bg-purple-900'}`}>
                             <div className={`text-2xl font-bold transition-colors duration-500 ${isUnicornTheme ? 'text-purple-800' : 'text-purple-300'}`}>{stats.percentage}%</div>
-                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-purple-600' : 'text-purple-400'}`}>Attendance Rate</div>
+                            <div className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-purple-600' : 'text-purple-400'}`}>Sparkle Rate</div>
                         </div>
                     </div>
                 </div>
@@ -274,31 +288,31 @@ const AttendanceTracker = ({ theme }) => {
                 {/* Student Attendance List */}
                 <div className={`${cardClasses} ${cardBgColor} mt-6`}>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className={`text-xl font-semibold ${headerColor}`}>Mark Attendance</h2>
-                        <span className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-gray-600' : 'text-gray-400'}`}>{students.length} students</span>
+                        <h2 className={`text-xl font-semibold ${headerColor}`}>Mark Today's Magic</h2>
+                        <span className={`text-sm transition-colors duration-500 ${isUnicornTheme ? 'text-gray-600' : 'text-gray-400'}`}>{students.length} little stars</span>
                     </div>
 
                     {students.length === 0 ? (
                         <div className={`text-center py-8 transition-colors duration-500 ${isUnicornTheme ? 'text-gray-500' : 'text-gray-400'}`}>
                             <div className="text-4xl mb-2">👶</div>
-                            <p>No students added yet.</p>
-                            <p className="text-sm">Click "Add Student" to get started.</p>
+                            <p>No students enrolled in the kingdom yet.</p>
+                            <p className="text-sm">Click "Add Little Star" to begin the adventure!</p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {students.map(student => {
                                 const status = getAttendanceStatus(student.id);
                                 const monthlyStats = monthlyReport[student.id] || { present: 0, total: 0 };
                                 const monthlyPercentage = monthlyStats.total > 0 ? Math.round((monthlyStats.present / monthlyStats.total) * 100) : 0;
 
-                                const studentCardClasses = `flex items-center justify-between p-4 rounded-lg border transition-all duration-300 ${isUnicornTheme ? 'border-gray-200 hover:bg-gray-50' : 'border-gray-700 hover:bg-gray-700'}`;
-                                const textMainColor = isUnicornTheme ? 'text-gray-900' : 'text-gray-100';
-                                const textSubColor = isUnicornTheme ? 'text-gray-600' : 'text-gray-400';
+                                const studentCardClasses = `flex items-center justify-between p-4 rounded-lg border transition-all duration-300 transform hover:scale-[1.02] ${isUnicornTheme ? 'border-purple-300 hover:bg-pink-100' : 'border-purple-800 hover:bg-purple-900'}`;
+                                const textMainColor = isUnicornTheme ? 'text-purple-900' : 'text-gray-100';
+                                const textSubColor = isUnicornTheme ? 'text-purple-600' : 'text-gray-400';
 
                                 return (
                                     <div key={student.id} className={studentCardClasses}>
                                         <div className="flex-1">
-                                            <div className={`font-medium ${textMainColor}`}>{student.name}</div>
+                                            <div className={`font-medium text-lg ${textMainColor}`}>{student.name}</div>
                                             <div className={`text-sm ${textSubColor}`}>
                                                 {student.age && `${student.age} years • `}{student.gender}
                                                 {monthlyStats.total > 0 && ` • Monthly: ${monthlyPercentage}%`}
@@ -310,7 +324,7 @@ const AttendanceTracker = ({ theme }) => {
                                                 <button
                                                     onClick={() => markAttendance(student.id, 'present')}
                                                     className={`px-4 py-2 rounded-full text-sm font-medium ${status === 'present'
-                                                        ? isUnicornTheme ? 'bg-green-600 text-white' : 'bg-green-700 text-white'
+                                                        ? isUnicornTheme ? 'bg-green-600 text-white shadow-md' : 'bg-green-700 text-white shadow-md'
                                                         : isUnicornTheme ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-green-900 text-green-300 hover:bg-green-800'
                                                         }`}
                                                 >
@@ -319,8 +333,8 @@ const AttendanceTracker = ({ theme }) => {
                                                 <button
                                                     onClick={() => markAttendance(student.id, 'absent')}
                                                     className={`px-4 py-2 rounded-full text-sm font-medium ${status === 'absent'
-                                                        ? isUnicornTheme ? 'bg-red-600 text-white' : 'bg-red-700 text-white'
-                                                        : isUnicornTheme ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-red-900 text-red-300 hover:bg-red-800'
+                                                        ? isUnicornTheme ? 'bg-red-600 text-white shadow-md' : 'bg-red-700 text-white shadow-md'
+                                                        : isUnicornTheme ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-red-900 text-red-800 hover:bg-red-800'
                                                         }`}
                                                 >
                                                     ❌ Absent
@@ -344,13 +358,13 @@ const AttendanceTracker = ({ theme }) => {
 
                 {/* Quick Actions */}
                 <div className={`${cardClasses} ${isUnicornTheme ? 'bg-blue-50 border border-blue-200' : 'bg-blue-900 border border-blue-800'} mt-6`}>
-                    <h3 className={`font-semibold mb-3 ${isUnicornTheme ? 'text-blue-800' : 'text-blue-300'}`}>💡 Quick Actions</h3>
+                    <h3 className={`font-semibold mb-3 ${isUnicornTheme ? 'text-blue-800' : 'text-blue-300'}`}>💡 Magical Shortcuts</h3>
                     <div className="flex flex-wrap gap-3">
                         <button
                             onClick={() => {
                                 students.forEach(student => markAttendance(student.id, 'present'));
                             }}
-                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-700 hover:bg-green-800 text-white'}`}
+                            className={`${buttonBaseClasses} text-sm ${isUnicornTheme ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-700 hover:bg-green-800 text-white'}`}
                         >
                             Mark All Present
                         </button>
@@ -358,7 +372,7 @@ const AttendanceTracker = ({ theme }) => {
                             onClick={() => {
                                 students.forEach(student => markAttendance(student.id, 'absent'));
                             }}
-                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-700 hover:bg-red-800 text-white'}`}
+                            className={`${buttonBaseClasses} text-sm ${isUnicornTheme ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-700 hover:bg-red-800 text-white'}`}
                         >
                             Mark All Absent
                         </button>
@@ -370,7 +384,7 @@ const AttendanceTracker = ({ theme }) => {
                                     setAttendanceRecords(updatedRecords);
                                 }
                             }}
-                            className={`${buttonBaseClasses} ${isUnicornTheme ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'bg-gray-700 hover:bg-gray-800 text-white'}`}
+                            className={`${buttonBaseClasses} text-sm ${isUnicornTheme ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'bg-gray-700 hover:bg-gray-800 text-white'}`}
                         >
                             Clear Today's Attendance
                         </button>
@@ -379,6 +393,27 @@ const AttendanceTracker = ({ theme }) => {
 
                 <AlertMessage message={alertMessage} onClose={() => setAlertMessage('')} isUnicornTheme={isUnicornTheme} />
             </div>
+
+            {/* Add custom animation styles */}
+            <style>
+                {`
+                @keyframes float-spin {
+                    0% { transform: translateY(0px) rotate(0deg); }
+                    50% { transform: translateY(-20px) rotate(360deg); }
+                    100% { transform: translateY(0px) rotate(720deg); }
+                }
+                .animate-float-spin {
+                    animation: float-spin var(--animation-duration, 8s) ease-in-out infinite;
+                }
+                @keyframes pop-in {
+                    0% { transform: scale(0.5); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                .animate-pulse {
+                    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
+                `}
+            </style>
         </div>
     );
 };
