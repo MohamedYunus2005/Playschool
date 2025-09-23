@@ -1,4 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Functions moved outside the component to prevent re-creation on re-render
+const generateCaptcha = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 5; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+};
+
+const speakCaptcha = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text.split('').join(' '));
+    window.speechSynthesis.speak(utterance);
+};
 
 // Component for a custom, state-driven alert message
 const AlertMessage = ({ message, type = 'error', onClose, isUnicornTheme }) => {
@@ -17,9 +32,94 @@ const AlertMessage = ({ message, type = 'error', onClose, isUnicornTheme }) => {
             <div className="flex justify-between items-center">
                 <p className="text-sm font-medium">{message}</p>
                 <button onClick={onClose} className="text-xl leading-none font-bold ml-4">
-                    &times;
+                    x
                 </button>
             </div>
+        </div>
+    );
+};
+
+// Animated Background Component
+const AnimatedBackground = ({ isUnicornTheme }) => {
+    return (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            {isUnicornTheme ? (
+                <>
+                    {/* Floating Emojis and Graphics for Unicorn Theme */}
+                    <span className="absolute text-4xl opacity-80 animate-float-slow" style={{ top: '10%', left: '15%' }}>🦄</span>
+                    <span className="absolute text-3xl opacity-70 animate-float-medium" style={{ top: '25%', left: '80%' }}>🌈</span>
+                    <span className="absolute text-2xl opacity-60 animate-float-fast" style={{ top: '60%', left: '40%' }}>✨</span>
+                    <span className="absolute text-5xl opacity-80 animate-float-slow" style={{ top: '80%', left: '10%' }}>💖</span>
+                    <span className="absolute text-3xl opacity-70 animate-float-medium" style={{ top: '45%', left: '60%' }}>🍬</span>
+                    <span className="absolute text-4xl opacity-90 animate-float-fast" style={{ top: '5%', left: '50%' }}>🌟</span>
+                    <span className="absolute text-3xl opacity-80 animate-float-slow" style={{ top: '70%', left: '75%' }}>🎈</span>
+                    <span className="absolute text-xl opacity-60 animate-float-medium" style={{ top: '15%', left: '65%' }}>💖</span>
+                    <span className="absolute text-2xl opacity-70 animate-float-fast" style={{ top: '35%', left: '25%' }}>🌈</span>
+                    <span className="absolute text-3xl opacity-80 animate-float-slow" style={{ top: '55%', left: '85%' }}>✨</span>
+                    <span className="absolute text-4xl opacity-70 animate-float-medium" style={{ top: '88%', left: '45%' }}>🦄</span>
+                    {/* New emojis and animations added here */}
+                    <span className="absolute text-3xl opacity-75 animate-float-fast animation-delay-1000" style={{ top: '10%', right: '10%' }}>🍭</span>
+                    <span className="absolute text-2xl opacity-65 animate-float-slow animation-delay-2000" style={{ top: '30%', right: '25%' }}>🍬</span>
+                    <span className="absolute text-4xl opacity-85 animate-float-medium animation-delay-3000" style={{ top: '50%', left: '10%' }}>🍨</span>
+                    <span className="absolute text-xl opacity-70 animate-float-slow animation-delay-4000" style={{ top: '70%', right: '5%' }}>🍧</span>
+                    <span className="absolute text-5xl opacity-90 animate-float-fast animation-delay-5000" style={{ top: '90%', left: '20%' }}>🍡</span>
+                    <span className="absolute text-3xl opacity-80 animate-float-medium animation-delay-6000" style={{ top: '20%', left: '5%' }}>🎂</span>
+                    <span className="absolute text-4xl opacity-75 animate-float-slow animation-delay-7000" style={{ top: '40%', right: '15%' }}>🍰</span>
+                    <span className="absolute text-2xl opacity-65 animate-float-fast animation-delay-8000" style={{ top: '5%', left: '85%' }}>🧁</span>
+                    <span className="absolute text-5xl opacity-85 animate-float-medium animation-delay-9000" style={{ top: '65%', left: '70%' }}>🍫</span>
+                    <span className="absolute text-3xl opacity-90 animate-float-slow animation-delay-10000" style={{ top: '80%', right: '35%' }}>💗</span>
+                    <span className="absolute text-2xl opacity-85 animate-float-fast animation-delay-11000" style={{ top: '5%', left: '5%' }}>💓</span>
+                    <span className="absolute text-3xl opacity-70 animate-float-medium animation-delay-12000" style={{ top: '90%', left: '90%' }}>💖</span>
+                    <span className="absolute text-xl opacity-60 animate-float-slow animation-delay-13000" style={{ top: '75%', right: '80%' }}>🌈</span>
+                    <span className="absolute text-4xl opacity-80 animate-float-fast animation-delay-14000" style={{ top: '40%', left: '50%' }}>🌟</span>
+                    <span className="absolute text-xl opacity-90 animate-float-medium animation-delay-15000" style={{ top: '20%', right: '50%' }}>❄</span>
+                </>
+            ) : (
+                <>
+                    {/* Floating Emojis and Graphics for Moon Theme */}
+                    <span className="absolute text-3xl opacity-80 animate-float-slow" style={{ top: '15%', left: '30%' }}>🌌</span>
+                    <span className="absolute text-4xl opacity-70 animate-float-medium" style={{ top: '40%', left: '10%' }}>🚀</span>
+                    <span className="absolute text-2xl opacity-60 animate-float-fast" style={{ top: '50%', left: '80%' }}>🪐</span>
+                    <span className="absolute text-5xl opacity-80 animate-float-slow" style={{ top: '85%', left: '60%' }}>⭐</span>
+                    <span className="absolute text-3xl opacity-70 animate-float-medium" style={{ top: '20%', left: '70%' }}>🌠</span>
+                    <span className="absolute text-4xl opacity-90 animate-float-fast" style={{ top: '75%', left: '30%' }}>🔭</span>
+                    <span className="absolute text-3xl opacity-80 animate-float-medium" style={{ top: '60%', left: '5%' }}>👾</span>
+                    <span className="absolute text-xl opacity-60 animate-float-slow" style={{ top: '30%', left: '55%' }}>🚀</span>
+                    <span className="absolute text-2xl opacity-70 animate-float-medium" style={{ top: '70%', left: '20%' }}>🪐</span>
+                    <span className="absolute text-3xl opacity-80 animate-float-fast" style={{ top: '95%', left: '75%' }}>⭐</span>
+                    <span className="absolute text-4xl opacity-70 animate-float-slow" style={{ top: '5%', left: '5%' }}>🌌</span>
+                    {/* New emojis and animations added here */}
+                    <span className="absolute text-5xl opacity-90 animate-float-medium animation-delay-1000" style={{ top: '10%', right: '10%' }}>☄</span>
+                    <span className="absolute text-4xl opacity-85 animate-float-slow animation-delay-2000" style={{ top: '30%', right: '25%' }}>🌠</span>
+                    <span className="absolute text-3xl opacity-80 animate-float-fast animation-delay-3000" style={{ top: '50%', left: '15%' }}>🌜</span>
+                    <span className="absolute text-2xl opacity-70 animate-float-medium animation-delay-4000" style={{ top: '70%', right: '5%' }}>✨</span>
+                    <span className="absolute text-xl opacity-60 animate-float-slow animation-delay-5000" style={{ top: '90%', left: '20%' }}>🌟</span>
+                    <span className="absolute text-5xl opacity-90 animate-float-fast animation-delay-6000" style={{ top: '20%', left: '5%' }}>💖</span>
+                    <span className="absolute text-3xl opacity-85 animate-float-medium animation-delay-7000" style={{ top: '40%', right: '15%' }}>💗</span>
+                    <span className="absolute text-4xl opacity-80 animate-float-slow animation-delay-8000" style={{ top: '5%', left: '85%' }}>💓</span>
+                    <span className="absolute text-2xl opacity-75 animate-float-fast animation-delay-9000" style={{ top: '65%', left: '70%' }}>🌌</span>
+                    <span className="absolute text-xl opacity-65 animate-float-medium animation-delay-10000" style={{ top: '80%', right: '35%' }}>🚀</span>
+                    <span className="absolute text-3xl opacity-90 animate-float-slow animation-delay-11000" style={{ top: '5%', left: '5%' }}>🪐</span>
+                    <span className="absolute text-4xl opacity-80 animate-float-fast animation-delay-12000" style={{ top: '90%', left: '90%' }}>☄</span>
+                    <span className="absolute text-5xl opacity-70 animate-float-medium animation-delay-13000" style={{ top: '75%', right: '80%' }}>🌠</span>
+                    <span className="absolute text-3xl opacity-95 animate-float-slow animation-delay-14000" style={{ top: '40%', left: '50%' }}>🌜</span>
+                    <span className="absolute text-2xl opacity-85 animate-float-fast animation-delay-15000" style={{ top: '20%', right: '50%' }}>✨</span>
+                </>
+            )}
+            {/* Themed background blobs for both light and dark modes */}
+            {isUnicornTheme ? (
+                <>
+                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+                </>
+            ) : (
+                <>
+                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob"></div>
+                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
+                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
+                </>
+            )}
         </div>
     );
 };
@@ -145,21 +245,7 @@ const LearningActivities = ({ theme }) => {
 
     return (
         <div className={`min-h-screen p-8 transition-all duration-1000 ${bgColor}`}>
-            {/* Themed background blobs for both light and dark modes */}
-            {isUnicornTheme ? (
-                <>
-                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob z-0"></div>
-                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 z-0"></div>
-                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 z-0"></div>
-                </>
-            ) : (
-                <>
-                    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob z-0"></div>
-                    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-2000 z-0"></div>
-                    <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen filter blur-xl opacity-50 animate-blob animation-delay-4000 z-0"></div>
-                </>
-            )}
-
+            <AnimatedBackground isUnicornTheme={isUnicornTheme} />
             <div className="relative z-10 container mx-auto px-4 py-8">
                 <h2 className={`text-4xl font-extrabold text-center mb-6 drop-shadow-md transition-colors duration-500 ${headerColor}`}>
                     📚 Learning Activities
